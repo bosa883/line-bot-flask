@@ -2,7 +2,6 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from pyngrok import ngrok
 from openai import OpenAI
 import os
 import random
@@ -118,8 +117,3 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
-
-if __name__ == "__main__":
-    public_url = ngrok.connect(8000)
-    print("LINE設定用URL:", public_url.public_url + "/callback")
-    app.run(port=8000)
