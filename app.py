@@ -25,6 +25,8 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 # カテゴリに応じた返信文
 CATEGORY_RESPONSES = {}
 
+print("aaa")
+
 def save_message_to_json(user_input):
     try:
         key, value = user_input.split(":::")  # 半角コロンに注意
@@ -117,3 +119,6 @@ def handle_message(event):
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
+
+if __name__ == "__main__":
+    app.run(port=8000)
