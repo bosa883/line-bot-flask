@@ -2,7 +2,9 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from pyngrok import ngrok
 from openai import OpenAI
+from github import Github
 import os
 import random
 import json
@@ -22,10 +24,27 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 # OpenAIクライアント（gpt-4o-mini使用）
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
+
 # カテゴリに応じた返信文
 CATEGORY_RESPONSES = {}
 
-print("aaa")
+def push_to_github(file_path, commit_message="Update file via Line Bot"):
+    try:
+        g = Github(GITHUB_TOKEN)
+        repo = g.get_repo("bosa883/line-bot-flask")  # あなたのリポジトリに変更
+        github_path = os.path.basename(file_path)  # GitHubのパス（ファイル名のみなら）
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            new_content = f.read()
+
+        contents = repo.get_contents(github_path)
+        repo.update_file(contents.path, commit_message, new_content, contents.sha)
+        print("GitHubにpushしました！")
+        return
+    except Exception as e:
+        print("GitHubへのpush時にエラー:", e)
+        return
 
 def save_message_to_json(user_input):
     try:
@@ -55,7 +74,8 @@ def save_message_to_json(user_input):
     # JSONファイルに書き込み
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
+    
+    push_to_github(json_path)
     print("保存しました！")
     return
 
@@ -122,3 +142,8 @@ def handle_message(event):
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    
+    # デバッグ用
+    # public_url = ngrok.connect(5000)
+    # print(f" * ngrok URL: {public_url}")
+    # app.run(port=5000)
